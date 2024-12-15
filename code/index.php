@@ -12,7 +12,13 @@ try{
 
     echo $result;
 }
-catch(Exception $e){
-    echo $e->getMessage();
+
+catch (Exception $e) {
+    file_put_contents(
+        'error_log.txt', 
+        "[" . date('Y-m-d H:i:s') . "] " . $e->getMessage() . "\n", 
+        FILE_APPEND
+    );
+    echo "Произошла ошибка: " . $e->getMessage();
 }
 

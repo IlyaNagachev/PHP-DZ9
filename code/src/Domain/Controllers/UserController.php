@@ -41,37 +41,47 @@ class UserController extends AbstractController {
     }
 
     public function actionSave(): string {
-        if(User::validateRequestData()) {
+        if (empty($_POST['name']) || empty($_POST['lastname'])) {
+            throw new \Exception(
+                empty($_POST['name']) 
+                    ? "Не введено имя пользователя" 
+                    : "Не введена фамилия пользователя"
+            );
+        }
+    
+        if (User::validateRequestData()) {
             $user = new User();
             $user->setParamsFromRequestData();
             $user->saveToStorage();
-
+    
             $render = new Render();
-
+    
             return $render->renderPage(
-                'user-created.tpl', 
+                'user-created.tpl',
                 [
                     'title' => 'Пользователь создан',
                     'message' => "Создан пользователь " . $user->getUserName() . " " . $user->getUserLastName()
-                ]);
-        }
-        else {
+                ]
+            );
+        } else {
             throw new \Exception("Переданные данные некорректны");
         }
     }
 
     public function actionDelete(): string {
-        if(User::exists($_GET['user_id'])) {
+        if (empty($_GET['user_id'])) {
+            throw new \Exception("Не указан ID пользователя для удаления");
+        }
+    
+        if (User::exists($_GET['user_id'])) {
             User::deleteFromStorage($_GET['user_id']);
-
             header('Location: /user');
             die();
-
-        }
-        else {
-            throw new \Exception("Пользователь не существует");
+        } else {
+            throw new \Exception("Пользователь с ID {$_GET['user_id']} не существует");
         }
     }
+    
 
     public function actionEdit(): string {
         $render = new Render();
@@ -138,41 +148,39 @@ class UserController extends AbstractController {
     }
 
     public function actionLogin(): string {
-        $result = false;
-
-        if(isset($_POST['login']) && isset($_POST['password'])){
-            $result = Application::$auth->proceedAuth($_POST['login'], $_POST['password']);
-            if($result &&
-                isset($_POST['user-remember']) && $_POST['user-remember'] == 'remember'){
-                $token = Application::$auth->generateToken($_SESSION['auth']['id_user']);
-
-                User::setToken($_SESSION['auth']['id_user'], $token);
-            }
-        }
-
-
-
-        if(!$result){
-            $render = new Render();
-
+        $render = new Render();
+    
+        if (empty($_POST['login']) || empty($_POST['password'])) {
             return $render->renderPageWithForm(
-                'user-auth.tpl', 
+                'user-auth.tpl',
                 [
                     'title' => 'Форма логина',
                     'auth-success' => false,
-                    'auth-error' => 'Неверные логин или пароль'
-                ]);
+                    'auth-error' => empty($_POST['login']) 
+                        ? "Не введен логин" 
+                        : "Не введен пароль",
+                ]
+            );
         }
-        else{
+    
+        $result = Application::$auth->proceedAuth($_POST['login'], $_POST['password']);
+        if ($result && isset($_POST['user-remember']) && $_POST['user-remember'] == 'remember') {
+            $token = Application::$auth->generateToken($_SESSION['auth']['id_user']);
+            User::setToken($_SESSION['auth']['id_user'], $token);
+        }
+    
+        if (!$result) {
+            return $render->renderPageWithForm(
+                'user-auth.tpl',
+                [
+                    'title' => 'Форма логина',
+                    'auth-success' => false,
+                    'auth-error' => 'Неверные логин или пароль',
+                ]
+            );
+        } else {
             header('Location: /');
             return "";
         }
-    }
-    public function actionLogout(): void {
-        User::destroyToken();
-        session_destroy();
-        unset($_SESSION['auth']);
-        header("Location: /");
-        die();
     }
 }

@@ -29,7 +29,7 @@ class Render {
             $templateVariables['user_name'] = $_SESSION['auth']['user_name'];
             $templateVariables['user_lastname'] = $_SESSION['auth']['user_lastname'];
         }
- 
+
         return $template->render($templateVariables);
     }
 
@@ -37,7 +37,7 @@ class Render {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         
         $templateVariables['csrf_token'] = $_SESSION['csrf_token'];
- 
+
         return $this->renderPage($contentTemplateName, $templateVariables);
     }
 }
