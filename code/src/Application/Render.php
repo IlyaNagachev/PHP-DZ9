@@ -23,15 +23,17 @@ class Render {
         $template = $this->environment->load('main.tpl');
         
         $templateVariables['content_template_name'] = $contentTemplateName;
-
-        if(isset($_SESSION['auth']['user_name'])){
+    
+        if (isset($_SESSION['auth']['user_name'])) {
             $templateVariables['user_authorized'] = true;
             $templateVariables['user_name'] = $_SESSION['auth']['user_name'];
             $templateVariables['user_lastname'] = $_SESSION['auth']['user_lastname'];
+            $templateVariables['userRoles'] = $_SESSION['auth']['roles'] ?? [];
         }
-
+    
         return $template->render($templateVariables);
     }
+    
 
     public function renderPageWithForm(string $contentTemplateName = 'page-index.tpl', array $templateVariables = []) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));

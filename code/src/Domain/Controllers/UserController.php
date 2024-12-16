@@ -183,4 +183,20 @@ class UserController extends AbstractController {
             return "";
         }
     }
+
+    public function actionDeleteAjax(): string {
+        $input = json_decode(file_get_contents('php://input'), true);
+    
+        if (empty($input['user_id'])) {
+            return json_encode(['success' => false, 'error' => 'Не указан ID пользователя']);
+        }
+    
+        if (User::exists($input['user_id'])) {
+            User::deleteFromStorage($input['user_id']);
+            return json_encode(['success' => true]);
+        } else {
+            return json_encode(['success' => false, 'error' => 'Пользователь не существует']);
+        }
+    }
+    
 }
